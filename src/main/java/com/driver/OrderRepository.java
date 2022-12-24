@@ -27,27 +27,20 @@ public class OrderRepository {
 
     public void addDeliveryPartner(String partnerId){
         DeliveryPartner deliveryPartner = new DeliveryPartner(partnerId);
-        deliveryPartnerRepository.put(deliveryPartner.getId(), deliveryPartner);
+        deliveryPartnerRepository.put(partnerId, deliveryPartner);
     }
 
     public void addOrderPartnerPair(String orderId,String partnerId){
         orderStatus.put(orderId,true);
-        Order order = orderRepository.get(orderId);
-        DeliveryPartner deliveryPartner = deliveryPartnerRepository.get(partnerId);
-        int currentNumberOfOrders = deliveryPartner.getNumberOfOrders();
-        int updatedNumberOfOrders = currentNumberOfOrders+1;
-
-        if(OrderPartnerMapping.containsKey(partnerId)){
-            List<String> listOfOrders = OrderPartnerMapping.get(partnerId);
-            listOfOrders.add(orderId);
-            OrderPartnerMapping.put(partnerId,listOfOrders);
+        List<String> listOfOrderIds = new ArrayList<>();
+        if(orderRepository.containsKey(orderId)&&deliveryPartnerRepository.containsKey(partnerId)){
+            if(OrderPartnerMapping.containsKey(partnerId)){
+                listOfOrderIds = OrderPartnerMapping.get(partnerId);
+            }
+            listOfOrderIds.add(orderId);
+            deliveryPartnerRepository.get(partnerId).setNumberOfOrders(listOfOrderIds.size());
         }
-        else{
-            List<String> firstOrder = new ArrayList<>();
-            firstOrder.add(orderId);
-            OrderPartnerMapping.put(partnerId,firstOrder);
-        }
-        deliveryPartner.setNumberOfOrders(updatedNumberOfOrders);
+        OrderPartnerMapping.put(partnerId,listOfOrderIds);
     }
 
     public Order getOrderById(String orderId){
@@ -64,11 +57,11 @@ public class OrderRepository {
     }
 
     public List<String> getAllOrdersByPartnerId(String partnerId){
-//        List<String> allOrders = new ArrayList<>();
-//        for(Order order: OrderPartnerMapping.get(partnerId)){
-//            allOrders.add(order.getId());
-//        }
-        return OrderPartnerMapping.get(partnerId);
+        List<String> allOrders = new ArrayList<>();
+        if(OrderPartnerMapping.containsKey(partnerId)){
+            allOrders = OrderPartnerMapping.get(partnerId);
+        }
+        return allOrders;
     }
 
     public List<String> getAllOrders(){
@@ -94,8 +87,8 @@ public class OrderRepository {
         int MM = Integer.parseInt(time.substring(3,5));
         int undeliveredOrderCount = 0;
         int t = HH*60+MM;
-        List<String> orders = OrderPartnerMapping.get(partnerId);
-        for(String orderId : orders){
+
+        for(String orderId : OrderPartnerMapping.get(partnerId)){
             if(orderRepository.get(orderId).getDeliveryTime()>t){
                 undeliveredOrderCount++;
             }
@@ -136,18 +129,18 @@ public class OrderRepository {
     }
 
     public void deleteOrder(String orderId){
-        if(deliveryPartnerRepository.containsKey(orderId)) {
-            Order orderToBeDeleted = orderRepository.get(orderId);
-            orderRepository.remove((orderId));
-            for (List<String> listOfOrders : OrderPartnerMapping.values()) {
-                for (String order : listOfOrders) {
-                    if (orderId == orderRepository.get(order).getId()) {
-                        orderStatus.remove(orderId);
-                        listOfOrders.remove(order);
-                    }
+        List<String> orders = new ArrayList<>();
+        for(String partnerId:OrderPartnerMapping.keySet()){
+            for(String order : OrderPartnerMapping.get(partnerId)){
+                if(order.equals(orderId)){
+                    orders = OrderPartnerMapping.get(partnerId);
+                    orders.remove(orderId);
+                    OrderPartnerMapping.put(partnerId,orders);
                 }
             }
         }
+        orderRepository.remove(orderId);
+        orderStatus.remove(orderId);
     }
 
 }
