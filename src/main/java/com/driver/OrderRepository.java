@@ -31,8 +31,8 @@ public class OrderRepository {
         Order order = orderRepository.get(orderId);
         DeliveryPartner deliveryPartner = deliveryPartnerRepository.get(partnerId);
         int currentNumberOfOrders = deliveryPartner.getNumberOfOrders();
-        currentNumberOfOrders++;
-        deliveryPartner.setNumberOfOrders(currentNumberOfOrders);
+        int updatedNumberOfOrders = currentNumberOfOrders+1;
+
         if(OrderPartnerMapping.containsKey(deliveryPartner)){
             List<Order> listOfOrders = OrderPartnerMapping.get(deliveryPartner);
             listOfOrders.add(order);
@@ -43,6 +43,8 @@ public class OrderRepository {
             firstOrder.add(order);
             OrderPartnerMapping.put(deliveryPartner,firstOrder);
         }
+        deliveryPartner.setNumberOfOrders(updatedNumberOfOrders);
+
     }
 
     public Order getOrderById(String orderId){
@@ -57,14 +59,18 @@ public class OrderRepository {
         return deliveryPartnerRepository.get(partnerId).getNumberOfOrders();
     }
 
-    public List<Order> getAllOrdersByPartnerId(String partnerId){
-        return OrderPartnerMapping.get(deliveryPartnerRepository.get(partnerId));
+    public List<String> getAllOrdersByPartnerId(String partnerId){
+        List<String> allOrders = new ArrayList<>();
+        for(Order order: OrderPartnerMapping.get(partnerId)){
+            allOrders.add(order.getId());
+        }
+        return allOrders;
     }
 
-    public List<Order> getAllOrders(){
-        List<Order> allOrders = new ArrayList<>();
+    public List<String> getAllOrders(){
+        List<String> allOrders = new ArrayList<>();
         for(Order order: orderRepository.values()){
-            allOrders.add(order);
+            allOrders.add(order.getId());
         }
         return allOrders;
     }
@@ -99,11 +105,16 @@ public class OrderRepository {
         for(Order order : orders){
             time = Math.max(time,order.getDeliveryTime());
         }
-        String t = Integer.toString(time);
-        String lastDeliveryTime = "";
-        lastDeliveryTime+=t.substring(0,2);
-        lastDeliveryTime+=":";
-        lastDeliveryTime+=t.substring(2,4);
+        StringBuilder sB = new StringBuilder();
+
+        int hours = time/60;
+        int minutes = time%60;
+        String HH = Integer.toString(hours);
+        String MM = Integer.toString(hours);
+        sB.append(hours);
+        sB.append(":");
+        sB.append(minutes);
+        String lastDeliveryTime = sB.toString();
         return lastDeliveryTime;
     }
 

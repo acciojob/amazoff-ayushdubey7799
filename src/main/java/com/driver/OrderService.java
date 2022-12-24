@@ -46,12 +46,12 @@ public class OrderService {
 
 
     public List<String> getOrdersByPartnerId(String partnerId){
-        return new ArrayList<String>();
+        return orderRepository.getAllOrdersByPartnerId(partnerId);
     }
 
 
     public List<String> getAllOrders(){
-      return new ArrayList<String>();
+      return orderRepository.getAllOrders();
     }
 
 
